@@ -1,5 +1,42 @@
 import sys
 
+
+class Video:
+
+  _id = None
+  _size = None
+
+  def __init__(self, the_id, size):
+    self._id = the_id
+    self._size = size
+
+
+class Endpoint:
+
+    _id = None
+    _latency = None
+    _caches = []
+    _videos = []
+
+    def __init__(self, the_id, latency, caches, videos):
+      self._id = the_id
+      self._latency = latency
+      self._caches = caches
+      self._videos = videos
+
+
+class Cache:
+
+  _id = None
+  _endpoints = []
+  _videos = []
+  _avg_latencies = None
+
+  def __init__(self, the_id, endpoints):
+    self._id = the_id
+    self._endpoints = endpoints
+
+
 if __name__ == '__main__':
   if len(sys.argv) != 2:
     print("You should give a file name as parameter.")
