@@ -10,31 +10,48 @@ class Video:
     self._id = the_id
     self._size = size
 
+  def __str__(self):
+    return "id: {} size: {}".format(self._id, self._size)
+
 
 class Endpoint:
 
     _id = None
     _latency = None
-    _caches = []
-    _videos = []
+    _caches = None
+    _videos = None
 
-    def __init__(self, the_id, latency, caches, videos):
+    def __init__(self, the_id, latency):
       self._id = the_id
       self._latency = latency
-      self._caches = caches
-      self._videos = videos
+      self._caches = []
+      self._videos = []
+
+    def __str__(self):
+      return ("id: {} latency: {} caches: " +
+              "{} videos: {}").format(self._id, self._latency,
+                                      [str(cache) for cache in self._caches],
+                                      [str(video) for video in self._videos])
 
 
 class Cache:
 
   _id = None
-  _endpoints = []
-  _videos = []
+  _endpoints = None
+  _videos = None
   _avg_latencies = None
 
-  def __init__(self, the_id, endpoints):
+  def __init__(self, the_id):
     self._id = the_id
-    self._endpoints = endpoints
+    self._endpoints = []
+    self._videos = []
+
+  def __str__(self):
+    return ("id: {} endpoints: {} videos: " +
+            "{} latencies: {}").format(self._id,
+                                       [str(ept) for ept in self._endpoints],
+                                       [str(video) for video in self._videos],
+                                       self._avg_latencies)
 
 
 if __name__ == '__main__':
@@ -50,18 +67,29 @@ if __name__ == '__main__':
   no_endpoints = int(line[1])
   no_requests = int(line[2])
   no_caches = int(line[3])
-  # Read videos
-  videos = input_file.readline().split(' ')
   # Read endpoints and latencies
   endpoints = []
-  for _ in range(no_endpoints):
+  # Assign caches
+  caches = [Cache(i) for i in range(no_caches)]
+  # Read videos
+  video_sizes = input_file.readline().split(' ')
+  videos = [Video(i, elem) for i, elem in enumerate(video_sizes)]
+  for i in range(no_endpoints):
     line = input_file.readline().split(' ')
-    endpoints.append({'data_center': int(line[0]), 'caches': []})
+    # New endpoint, give id and datacenter latency
+    endpoints.append(Endpoint(i, line[0]))
     for _ in range(int(line[1])):
-      line = input_file.readline().split(' ')
-      (endpoints[-1]['caches']).append({'id': line[0], 'latency': line[1]})
+      line2 = input_file.readline().split(' ')
+      endpoints[-1]._caches.append((caches[int(line2[0])], int(line2[1])))
+      caches[int(line2[0])]._endpoints.append(endpoints[-1])
   # Read requests
-  requests = []
   for _ in range(no_requests):
     line = input_file.readline().split(' ')
-    requests.append({'video': line[0], 'endpoint': line[1], 'no': line[2]})
+    endpoints[int(line[1])]._videos.append((videos[int(line[0])],
+                                           int(line[2])))
+  # Print shit
+  print([str(video) for video in videos])
+  print("__________________________")
+  print([str(endpoint) for endpoint in endpoints])
+  print("__________________________")
+  print([str(cache) for cache in caches])
