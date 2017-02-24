@@ -15,6 +15,9 @@ class Video:
   def __str__(self):
     return "id: {} size: {}".format(self._id, self._size)
 
+  def __hash__(self):
+    return self._id
+
 
 class Endpoint:
 
@@ -46,13 +49,13 @@ class Cache:
   def __init__(self, the_id):
     self._id = the_id
     self._endpoints = []
-    self._videos = []
+    self._videos = {}
 
-  def get_optimal_videos(self, video_weights_matrix):
+  def get_optimal_videos(self, video_weights_matrix=None):
+    video_weights_matrix = self._videos
     no_videos = len(video_weights_matrix)
-    valueMatrix = [[] for _ in no_videos]
-    valueMatrix[0] = [0 for _ in no_videos]
-    keep = [[0 for _ in CACHE_SIZE] for _ in no_videos]
+    valueMatrix = [[0 for _ in range(CACHE_SIZE)] for _ in range(no_videos)]
+    keep = [[0 for _ in range(CACHE_SIZE)] for _ in range(no_videos)]
     for i, video in enumerate(video_weights_matrix):
       for j in range(CACHE_SIZE):
         # If video's weight less than current weight limit
@@ -68,11 +71,11 @@ class Cache:
         else:
           valueMatrix[i][j] = valueMatrix[i - 1][j]
     videos = []
-    k = CACHE_SIZE
-    for i in range(no_videos, 0, -1):
+    k = CACHE_SIZE - 1
+    for i in range(no_videos - 1, -1, -1):
       if keep[i][k] == 1:
         videos.append(video_weights_matrix[i])
-        k -= video_weights_matrix[i][1]
+        k -= video_weights_matrix[i][0]
     return videos
 
   def __str__(self):
@@ -103,11 +106,11 @@ if __name__ == '__main__':
   caches = [Cache(i) for i in range(no_caches)]
   # Read videos
   video_sizes = input_file.readline().split(' ')
-  videos = [Video(i, elem) for i, elem in enumerate(video_sizes)]
+  videos = [Video(i, int(elem)) for i, elem in enumerate(video_sizes)]
   for i in range(no_endpoints):
     line = input_file.readline().split(' ')
     # New endpoint, give id and datacenter latency
-    endpoints.append(Endpoint(i, line[0]))
+    endpoints.append(Endpoint(i, int(line[0])))
     for _ in range(int(line[1])):
       line2 = input_file.readline().split(' ')
       endpoints[-1]._caches.append((caches[int(line2[0])], int(line2[1])))
@@ -115,11 +118,32 @@ if __name__ == '__main__':
   # Read requests
   for _ in range(no_requests):
     line = input_file.readline().split(' ')
-    endpoints[int(line[1])]._videos.append((videos[int(line[0])],
-                                           int(line[2])))
-  # Print shit
-  print([str(video) for video in videos])
-  print("__________________________")
-  print([str(endpoint) for endpoint in endpoints])
-  print("__________________________")
-  print([str(cache) for cache in caches])
+    video = videos[int(line[0])]
+    endpoint = endpoints[int(line[1])]
+    requests = int(line[2])
+
+    for cache, latency_to_cache in endpoint._caches:
+      latency_saved = endpoint._latency - latency_to_cache
+      value = latency_saved * requests
+      if video in cache._videos:
+        cache._videos[video] = (video._size, value + cache._videos[video][1],
+                                video._id)
+      else:
+        cache._videos[video] = (video._size, value, video._id)
+  for cache in caches:
+    cache._videos = cache._videos.values()
+
+  no_used_caches = 0
+  output = ''
+  for cache in caches:
+    videos = cache.get_optimal_videos()
+    if len(videos) == 0:
+      continue
+    no_used_caches += 1
+    res = str(cache._id)
+    for vid in videos:
+      res += ' ' + str(vid[2])
+    res += '\n'
+    output += res
+  print(no_used_caches)
+  print(output.strip())
