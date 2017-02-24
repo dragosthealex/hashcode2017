@@ -1,4 +1,6 @@
 import sys
+import time
+
 
 CACHE_SIZE = 0
 
@@ -52,8 +54,10 @@ class Cache:
     self._videos = {}
 
   def get_optimal_videos(self, video_weights_matrix=None):
+    start = time.clock()
     video_weights_matrix = self._videos
     no_videos = len(video_weights_matrix)
+    print "PROCESSING CACHE: " + str(self._id) + " with " + str(no_videos) + "v"
     valueMatrix = [[0 for _ in range(CACHE_SIZE)] for _ in range(no_videos)]
     keep = [[0 for _ in range(CACHE_SIZE)] for _ in range(no_videos)]
     for i, video in enumerate(video_weights_matrix):
@@ -76,6 +80,7 @@ class Cache:
       if keep[i][k] == 1:
         videos.append(video_weights_matrix[i])
         k -= video_weights_matrix[i][0]
+    print "Time: " + str(time.clock() - start)
     return videos
 
   def __str__(self):
@@ -99,6 +104,7 @@ if __name__ == '__main__':
   no_endpoints = int(line[1])
   no_requests = int(line[2])
   no_caches = int(line[3])
+  print "CACHES: #" + str(no_caches)
   CACHE_SIZE = int(line[4])
   # Read endpoints and latencies
   endpoints = []
