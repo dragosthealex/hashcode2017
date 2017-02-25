@@ -105,6 +105,8 @@ if __name__ == '__main__':
   no_requests = int(line[2])
   no_caches = int(line[3])
   print "CACHES: #" + str(no_caches)
+  print "ENDPOS: #" + str(no_endpoints)
+  print "REQUES: #" + str(no_requests)
   CACHE_SIZE = int(line[4])
   # Read endpoints and latencies
   endpoints = []
@@ -122,7 +124,7 @@ if __name__ == '__main__':
       endpoints[-1]._caches.append((caches[int(line2[0])], int(line2[1])))
       caches[int(line2[0])]._endpoints.append(endpoints[-1])
   # Read requests
-  for _ in range(no_requests):
+  for index in range(no_requests):
     line = input_file.readline().split(' ')
     video = videos[int(line[0])]
     endpoint = endpoints[int(line[1])]
@@ -152,4 +154,6 @@ if __name__ == '__main__':
     res += '\n'
     output += res
   print(no_used_caches)
+  with open("output.out", "w+") as outfile:
+    outfile.write(output.strip())
   print(output.strip())
